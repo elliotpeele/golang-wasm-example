@@ -1,0 +1,123 @@
+<!--
+// Copyright (c) 2019 Elliot Peele <elliot@bentlogic.net>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+-->
+<!doctype html>
+<html>
+	<head>
+        <script src="wasm_exec.js"></script>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+        <title>GoLang WASM Example</title>
+		<script>
+            const go = new Go();
+            let mod, inst;
+            WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then(
+                async result => {
+                    mod = result.module;
+                    inst = result.instance;
+                    await go.run(inst);
+                }
+            );
+        </script>
+
+	</head>
+    <body class="pt-5">
+        <div class="navbar navbar-expand-lg fixed-top navbar-dark bg-primary">
+            <div class="container">
+                <a href="." class="navbar-brand">WASM Example</a>
+                <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                    <div class="navbar-collapse collapse" id="navbarResponsive">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <button class="nav-link btn btn-link" onClick="listUsers();">Users</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link btn btn-link" onClick="listProjects();">Projects</button>
+                        </li>
+                    </ul>
+                    <div class="navbar-nav navbar-right ml-auto">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Search" name="srch-term" id="srch-term">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container pt-5" id="data">
+            <table class="table table-hover table-striped">
+                <thead id="tableHeader">
+                </thead>
+                <tbody id="tableContent">
+                </tbody>
+            </table>
+            <div style="display: none;">
+                <table>
+                    <thead>
+                        <th scope="col" class="sorting" id="headerNode"></th>
+                    </thead>
+                    <tbody>
+                        <tr class="table-active" id="rowNode"></tr>
+                    </tbody>
+                </table>
+                <ul>
+                    <li class="page-item disabled" id="pagerLeftDisabled">
+                        <button class="page-link" onClick="prevPage();">&laquo;</button>
+                    </li>
+                    <li class="page-item" id="pagerLeftEnabled">
+                        <button class="page-link" onClick="prevPage();">&laquo;</button>
+                    </li>
+
+                    <li class="page-item active" id="activePage">
+                        <button class="page-link" href="#">1</button>
+                    </li>
+                    <li class="page-item" id="inactivePage">
+                        <button class="page-link" onClick="page(this.innerHTML);">#</button>
+                    </li>
+
+                    <li class="page-item disabled" id="pagerRightDisabled">
+                        <button class="page-link" onClick="nextPage();">&raquo;</button>
+                    </li>
+                    <li class="page-item" id="pagerRightEnabled">
+                        <button class="page-link" onClick="nextPage();">&raquo;</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div id="paging">
+            <ul class="pagination justify-content-center" id="pager">
+            </ul>
+        </div>
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <!--
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        -->
+    </body>
+</html>
