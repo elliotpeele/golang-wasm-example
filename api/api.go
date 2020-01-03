@@ -24,6 +24,8 @@ import (
 	"context"
 
 	"github.com/elliotpeele/golang-wasm-example/api/pb"
+	"github.com/elliotpeele/golang-wasm-example/sampledata"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/op/go-logging"
 )
 
@@ -40,10 +42,42 @@ func New() (*Server, error) {
 
 // ListUsers lists all users
 func (s *Server) ListUsers(ctx context.Context, e *pb.Empty) (*pb.UsersResponse, error) {
-	return &pb.UsersResponse{}, nil
+	resp := &pb.UsersResponse{}
+	users, err := sampledata.Users()
+	if err != nil {
+		return resp, err
+	}
+	logger.Debugf("found %d users", len(users))
+	for _, user := range users {
+		resp.Users = append(resp.Users, &pb.User{
+			Id:        user.ID,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Email:     user.Email,
+			UpdatedAt: &timestamp.Timestamp{
+				Seconds: user.UpdatedAt.Unix(),
+			},
+		})
+	}
+	return resp, nil
 }
 
 // ListProjects lists all projects
 func (s *Server) ListProjects(ctx context.Context, e *pb.Empty) (*pb.ProjectsResponse, error) {
-	return &pb.ProjectsResponse{}, nil
+	resp := &pb.ProjectsResponse{}
+	projects, err := sampledata.Projects()
+	if err != nil {
+		return resp, err
+	}
+	logger.Debugf("found %d projects", len(projects))
+	for _, proj := range projects {
+		resp.Projects = append(resp.Projects, &pb.Project{
+			Id:   proj.ID,
+			Name: proj.Name,
+			UpdatedAt: &timestamp.Timestamp{
+				Seconds: proj.UpdatedAt.Unix(),
+			},
+		})
+	}
+	return resp, nil
 }

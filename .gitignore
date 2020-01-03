@@ -3,3 +3,7 @@ main.wasm
 tools
 build
 assets_generated.go
+
+sampledata/gen
+sampledata/generated_data.go
+sampledata/generated

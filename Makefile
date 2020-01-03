@@ -36,18 +36,29 @@ GO      = $(BUILD_ENV) go
 GOBUILD = go build -v
 
 .PHONY: all
-binaries: frontend linux windows osx
+binaries: frontend sampledata linux windows osx
 
 # tools
 GOBINDATA = $(TOOLS)/go-bindata
 $(GOBINDATA):
 	$(GO) build -o $@ github.com/shuLhan/go-bindata
 
+.PHONY: tools
+toos: | $(GOBINDATA)
+
 .PHONY: clean
 clean:
 	rm -rf $(GO_OUT_PATH)
 	rm -rf $(TOOLS)
 	make -C frontend clean
+
+	rm -f sampledata/gen
+	rm -rf sampledata/generated
+	rm -f sampledata/generated_data.go
+
+.PHONY: sampledata
+sampledata: tools
+	PATH=$(TOOLS):$$PATH $(GO) generate -x ./sampledata
 
 .PHONY: frontend
 frontend:

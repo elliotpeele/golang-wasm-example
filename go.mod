@@ -3,10 +3,12 @@ module github.com/elliotpeele/golang-wasm-example
 go 1.13
 
 require (
+	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/golang/protobuf v1.3.2
 	github.com/jinzhu/gorm v1.9.11
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/satori/go.uuid v1.2.0
 	github.com/shuLhan/go-bindata v3.4.0+incompatible // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.1
