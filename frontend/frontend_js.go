@@ -28,10 +28,11 @@ import (
 	"syscall/js"
 	"time"
 
-	"google.golang.org/grpc"
 	"github.com/tarndt/wasmws"
+	"google.golang.org/grpc"
 
 	"github.com/elliotpeele/golang-wasm-example/api/pb"
+	"github.com/elliotpeele/golang-wasm-example/frontend/datatable"
 	"github.com/elliotpeele/golang-wasm-example/frontend/dom"
 )
 
@@ -51,14 +52,6 @@ golang-wasm-example frontend:
  go compiler : %s
  platform    : %s/%s
 `, version, buildDate, commitHash, runtime.Version(), runtime.Compiler, runtime.GOOS, runtime.GOARCH)
-}
-
-func mkInterfaceSlice(items ...interface{}) []interface{} {
-	data := make([]interface{}, len(items))
-	for i, item := range items {
-		data[i] = item
-	}
-	return data
 }
 
 type client struct {
@@ -121,27 +114,24 @@ func (c *client) listUsers(this js.Value, i []js.Value) interface{} {
 			log.Printf("error listing users: %s", err)
 			return
 		}
-		dp := &datapager{
-			headers: []string{
-				"id",
-				"updated at",
-				"first name",
-				"last name",
-				"email",
-			},
-		}
+		dt := datatable.New().WithPagination().WithSearch()
+		dt.Headers(
+			"id",
+			"updated at",
+			"first name",
+			"last name",
+			"email",
+		)
 		for _, u := range resp.Users {
-			dp.items = append(dp.items, mkInterfaceSlice(
+			dt.AppendRow(
 				u.Id,
 				time.Unix(u.UpdatedAt.Seconds, 0).UTC().String(),
 				u.FirstName,
 				u.LastName,
 				u.Email,
-			))
+			)
 		}
-		dp.registerCallbacks()
-		dp.applyFilter("")
-		dp.renderPage(0)
+		dt.Render()
 	}()
 	return nil
 }
@@ -154,23 +144,20 @@ func (c *client) listProjects(this js.Value, i []js.Value) interface{} {
 			log.Printf("error listing projects: %s", err)
 			return
 		}
-		dp := &datapager{
-			headers: []string{
-				"id",
-				"name",
-				"updated at",
-			},
-		}
+		dt := datatable.New().WithPagination().WithSearch()
+		dt.Headers(
+			"id",
+			"name",
+			"updated at",
+		)
 		for _, p := range resp.Projects {
-			dp.items = append(dp.items, mkInterfaceSlice(
+			dt.AppendRow(
 				p.Id,
 				p.Name,
 				time.Unix(p.UpdatedAt.Seconds, 0).UTC().String(),
-			))
+			)
 		}
-		dp.registerCallbacks()
-		dp.applyFilter("")
-		dp.renderPage(0)
+		dt.Render()
 	}()
 	return nil
 }

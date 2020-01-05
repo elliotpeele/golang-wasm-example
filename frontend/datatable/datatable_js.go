@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
+package datatable
 
 import (
 	"fmt"
@@ -35,14 +35,89 @@ const (
 	selectablePages = 5
 )
 
-type datapager struct {
+// DataTable describes an interface for populating tables of data
+type DataTable interface {
+	Headers(...string) DataTable
+	AppendRow(...interface{}) DataTable
+	Render()
+	WithPagination() DataTable
+	WithSearch() DataTable
+	WithPageSize(int) DataTable
+	WithSelectablePages(int) DataTable
+}
+
+// New creates an instance of a DataTable
+func New() DataTable {
+	return &datatable{
+		pageSize: pageSize,
+		selectablePages: selectablePages,
+	}
+}
+
+type datatable struct {
 	headers       []string
 	items         [][]interface{}
 	curPage       int
 	filteredItems []int
+
+	hasPagination bool
+	hasSearch bool
+
+	pageSize int
+	selectablePages int
 }
 
-func (d *datapager) renderPage(offset int) {
+// Headers sets the table headers
+func (d *datatable) Headers(hdrs ...string) DataTable {
+	d.headers = hdrs
+	return d
+}
+
+// AppendItem adds a row to the table
+func (d *datatable) AppendRow(cols ...interface{}) DataTable {
+	d.items = append(d.items, cols)
+	return d
+}
+
+// Render attaches the table to the dom
+func (d *datatable) Render() {
+	d.registerCallbacks()
+	d.applyFilter("")
+	d.render(0)
+}
+
+// WithPagination enables pagination in the collection, otherwise only pageSize will be rendered
+func (d *datatable) WithPagination() DataTable {
+	d.hasPagination = true
+	return d
+}
+
+// WithSearch enables searching of the collection
+func (d *datatable) WithSearch() DataTable {
+	d.hasSearch = true
+	return d
+}
+
+// WithPageSize changes the default page size from 20 to the desired value
+func (d *datatable) WithPageSize(s int) DataTable {
+	d.pageSize = s
+	return d
+}
+
+// WithSelectablePages changes how many pages show up in the paginator, defaults to 5
+func (d *datatable) WithSelectablePages(s int) DataTable {
+	d.selectablePages = selectablePages
+	return d
+}
+
+func (d *datatable) render(offset int) {
+	d.renderPage(offset)
+	if d.hasPagination {
+		d.renderPaginator(offset)
+	}
+}
+
+func (d *datatable) renderPage(offset int) {
 	headerTmpl := dom.GetElementByID("headerNode")
 	rowTmpl := dom.GetElementByID("rowNode")
 
@@ -70,11 +145,9 @@ func (d *datapager) renderPage(offset int) {
 		}
 		content.Append(row)
 	}
-
-	d.renderPaginator(offset)
 }
 
-func (d *datapager) renderPaginator(offset int) {
+func (d *datatable) renderPaginator(offset int) {
 	activePageTmpl := dom.GetElementByID("activePage")
 	inactivePageTmpl := dom.GetElementByID("inactivePage")
 	pagerLeftDisabled := dom.GetElementByID("pagerLeftDisabled").Clone().WithID(fmt.Sprintf("pld%d", offset))
@@ -84,8 +157,8 @@ func (d *datapager) renderPaginator(offset int) {
 
 	pager := dom.GetElementByID("pager").WithInnerHTML("")
 
-	maxPages := selectablePages
-	if d.pageCount() < selectablePages {
+	maxPages := d.selectablePages
+	if d.pageCount() < d.selectablePages {
 		maxPages = d.pageCount()
 	}
 
@@ -118,7 +191,7 @@ func (d *datapager) renderPaginator(offset int) {
 	}
 }
 
-func (d *datapager) applyFilter(fltr string) {
+func (d *datatable) applyFilter(fltr string) {
 	d.filteredItems = nil
 	for i, row := range d.items {
 		for _, item := range row {
@@ -128,7 +201,7 @@ func (d *datapager) applyFilter(fltr string) {
 			}
 			// assume everything else is a string
 			// FIXME: should let data provider indicate which columns are filterable
-			if strings.Contains(item.(string), fltr) {
+			if strings.Contains(strings.ToLower(item.(string)), strings.ToLower(fltr)) {
 				d.filteredItems = append(d.filteredItems, i)
 				// Only add each row once
 				break
@@ -137,29 +210,29 @@ func (d *datapager) applyFilter(fltr string) {
 	}
 }
 
-func (d *datapager) pageCount() int {
-	if len(d.filteredItems)%pageSize == 0 {
-		return len(d.filteredItems) / pageSize
+func (d *datatable) pageCount() int {
+	if len(d.filteredItems)%d.pageSize == 0 {
+		return len(d.filteredItems) / d.pageSize
 	}
-	return (len(d.filteredItems) / pageSize) + 1
+	return (len(d.filteredItems) / d.pageSize) + 1
 }
 
-func (d *datapager) nextPage() {
+func (d *datatable) nextPage() {
 	d.curPage++
-	d.renderPage(d.curPage)
+	d.render(d.curPage)
 }
 
-func (d *datapager) prevPage() {
+func (d *datatable) prevPage() {
 	d.curPage--
-	d.renderPage(d.curPage)
+	d.render(d.curPage)
 }
 
-func (d *datapager) page(offset int) {
+func (d *datatable) page(offset int) {
 	d.curPage = offset
-	d.renderPage(d.curPage)
+	d.render(d.curPage)
 }
 
-func (d *datapager) registerCallbacks() {
+func (d *datatable) registerCallbacks() {
 	dom.RegisterFunc("nextPage", func(this js.Value, i []js.Value) interface{} {
 		d.nextPage()
 		return nil
@@ -178,14 +251,18 @@ func (d *datapager) registerCallbacks() {
 		return nil
 	})
 	dom.GetElementByID("srch-term").RemoveAllEventListeners().AddEventListener("input", func(this js.Value, i []js.Value) interface{} {
-		log.Printf("event listener triggered")
+		log.Printf("search input event listener triggered")
+		if !d.hasSearch {
+			log.Printf("search is disabled for this collection")
+			return nil
+		}
 		fltrStr := dom.GetElementByID("srch-term").Get("value").String()
 		d.applyFilter(fltrStr)
 		// Reset current page pointer if filter makes collection smaller than current location
 		if d.pageCount() < d.curPage {
 			d.curPage = 0
 		}
-		d.renderPage(d.curPage)
+		d.render(d.curPage)
 		return nil
 	})
 }
