@@ -49,7 +49,7 @@ type DataTable interface {
 // New creates an instance of a DataTable
 func New() DataTable {
 	return &datatable{
-		pageSize: pageSize,
+		pageSize:        pageSize,
 		selectablePages: selectablePages,
 	}
 }
@@ -61,9 +61,9 @@ type datatable struct {
 	filteredItems []int
 
 	hasPagination bool
-	hasSearch bool
+	hasSearch     bool
 
-	pageSize int
+	pageSize        int
 	selectablePages int
 }
 
@@ -82,6 +82,7 @@ func (d *datatable) AppendRow(cols ...interface{}) DataTable {
 // Render attaches the table to the dom
 func (d *datatable) Render() {
 	d.registerCallbacks()
+	d.clearSearch()
 	d.applyFilter("")
 	d.render(0)
 }
@@ -232,6 +233,14 @@ func (d *datatable) page(offset int) {
 	d.render(d.curPage)
 }
 
+func (d *datatable) clearSearch() {
+	dom.GetElementByID("srch-term").Set("value", "")
+}
+
+func (d *datatable) getSearch() string {
+	return dom.GetElementByID("srch-term").Get("value").String()
+}
+
 func (d *datatable) registerCallbacks() {
 	dom.RegisterFunc("nextPage", func(this js.Value, i []js.Value) interface{} {
 		d.nextPage()
@@ -256,8 +265,7 @@ func (d *datatable) registerCallbacks() {
 			log.Printf("search is disabled for this collection")
 			return nil
 		}
-		fltrStr := dom.GetElementByID("srch-term").Get("value").String()
-		d.applyFilter(fltrStr)
+		d.applyFilter(d.getSearch())
 		// Reset current page pointer if filter makes collection smaller than current location
 		if d.pageCount() < d.curPage {
 			d.curPage = 0
