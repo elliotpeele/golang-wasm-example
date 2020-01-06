@@ -25,15 +25,8 @@ import (
 	"fmt"
 	"log"
 	"runtime"
-	"syscall/js"
-	"time"
 
-	"github.com/tarndt/wasmws"
-	"google.golang.org/grpc"
-
-	"github.com/elliotpeele/golang-wasm-example/api/pb"
-	"github.com/elliotpeele/golang-wasm-example/frontend/datatable"
-	"github.com/elliotpeele/golang-wasm-example/frontend/dom"
+	"github.com/elliotpeele/golang-wasm-example/frontend/client"
 )
 
 var (
@@ -54,12 +47,6 @@ golang-wasm-example frontend:
 `, version, buildDate, commitHash, runtime.Version(), runtime.Compiler, runtime.GOOS, runtime.GOARCH)
 }
 
-type client struct {
-	ctx  context.Context
-	conn *grpc.ClientConn
-	cli  pb.WASMExampleClient
-}
-
 func main() {
 	log.Println("WASM Go Initialized")
 	log.Println(versionInfo())
@@ -70,97 +57,13 @@ func main() {
 	appCtx, appCancel := context.WithCancel(context.Background())
 	defer appCancel()
 
-	//Dial setup
-	const dialTO = time.Second * 30
-	dialCtx, dialCancel := context.WithTimeout(appCtx, dialTO)
-	defer dialCancel()
-
-	loc, err := dom.ParseLocation()
+	cli, err := client.New(appCtx)
 	if err != nil {
-		log.Fatalf("failed to parse location information: %s", err)
+		log.Fatal(err)
 	}
-	log.Printf("location info: %+v", loc)
-
-	//Connect to remote gRPC server
-	websocketURL := fmt.Sprintf("ws://%s/grpc-proxy", loc.Host)
-	conn, err := grpc.DialContext(dialCtx, "passthrough:///"+websocketURL, grpc.WithContextDialer(wasmws.GRPCDialer), grpc.WithDisableRetry(), grpc.WithMaxMsgSize(1*1024*1024*1024), grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Could not gRPC dial: %s; Details: %s", websocketURL, err)
-	}
-
-	cli := &client{
-		ctx:  appCtx,
-		conn: conn,
-		cli:  pb.NewWASMExampleClient(conn),
-	}
-	cli.registerCallbacks()
-
+	
 	// default display of users
-	cli.listUsers(js.Value{}, nil)
+	cli.ListUsers()
 
 	<-ch
-}
-
-func (c *client) registerCallbacks() {
-	dom.RegisterFunc("listUsers", c.listUsers)
-	dom.RegisterFunc("listProjects", c.listProjects)
-}
-
-func (c *client) listUsers(this js.Value, i []js.Value) interface{} {
-	log.Println("listUsers called")
-	go func() {
-		resp, err := c.cli.ListUsers(c.ctx, &pb.Empty{})
-		if err != nil {
-			log.Printf("error listing users: %s", err)
-			return
-		}
-		dt := datatable.New().WithPagination().WithSearch()
-		dt.Headers(
-			"id",
-			"updated at",
-			"first name",
-			"last name",
-			"email",
-		)
-		for _, u := range resp.Users {
-			dt.AppendRow(
-				u.Id,
-				time.Unix(u.UpdatedAt.Seconds, 0).UTC().String(),
-				u.FirstName,
-				u.LastName,
-				u.Email,
-			)
-		}
-		dt.Render()
-	}()
-	return nil
-}
-
-func (c *client) listProjects(this js.Value, i []js.Value) interface{} {
-	log.Println("listProjects called")
-	go func() {
-		resp, err := c.cli.ListProjects(c.ctx, &pb.Empty{})
-		if err != nil {
-			log.Printf("error listing projects: %s", err)
-			return
-		}
-		dt := datatable.New().WithPagination().WithSearch()
-		dt.Headers(
-			"id",
-			"name",
-			"updated at",
-			"button",
-		)
-		for _, p := range resp.Projects {
-			btn := dom.GetElementByID("testButton").Clone().WithID(p.Id)
-			dt.AppendRow(
-				p.Id,
-				p.Name,
-				time.Unix(p.UpdatedAt.Seconds, 0).UTC().String(),
-				btn,
-			)
-		}
-		dt.Render()
-	}()
-	return nil
 }
