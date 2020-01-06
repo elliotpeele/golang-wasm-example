@@ -149,12 +149,15 @@ func (c *client) listProjects(this js.Value, i []js.Value) interface{} {
 			"id",
 			"name",
 			"updated at",
+			"button",
 		)
 		for _, p := range resp.Projects {
+			btn := dom.GetElementByID("testButton").Clone().WithID(p.Id)
 			dt.AppendRow(
 				p.Id,
 				p.Name,
 				time.Unix(p.UpdatedAt.Seconds, 0).UTC().String(),
+				btn,
 			)
 		}
 		dt.Render()
