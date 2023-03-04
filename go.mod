@@ -9,7 +9,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/viper v1.6.1
+	github.com/spf13/viper v1.15.0
 	github.com/tarndt/wasmws v0.0.0-20191230183838-0f186a886e92
 	google.golang.org/grpc v1.53.0
 )
