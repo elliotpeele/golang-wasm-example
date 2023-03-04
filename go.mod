@@ -11,6 +11,6 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.1
 	github.com/tarndt/wasmws v0.0.0-20191230183838-0f186a886e92
-	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/grpc v1.26.0
 )
