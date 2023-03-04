@@ -5,13 +5,13 @@ go 1.13
 require (
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/golang/protobuf v1.3.2
-	github.com/jinzhu/gorm v1.9.11
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/satori/go.uuid v1.2.0
-	github.com/shuLhan/go-bindata v3.4.0+incompatible // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.1
 	github.com/tarndt/wasmws v0.0.0-20191230183838-0f186a886e92
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	google.golang.org/grpc v1.26.0
 )
