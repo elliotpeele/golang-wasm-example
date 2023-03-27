@@ -11,5 +11,5 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.1
 	github.com/tarndt/wasmws v0.0.0-20191230183838-0f186a886e92
-	google.golang.org/grpc v1.53.0
+	google.golang.org/grpc v1.54.0
 )
